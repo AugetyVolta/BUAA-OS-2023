@@ -28,6 +28,16 @@ FEXPORT(ret_from_exception)
 	rfe
 .set reorder
 
+.text
+FEXPORT(new_ret_from_exception)
+	RESTORE_SOME
+	lw      k0, TF_EPC(sp)
+	lw      sp, TF_REG29(sp) /* Deallocate stack */
+.set noreorder
+	jr      k0
+	rfe
+.set reorder
+
 
 
 NESTED(handle_int, TF_SIZE, zero)

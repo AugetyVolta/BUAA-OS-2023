@@ -2,16 +2,18 @@
 #include <pmap.h>
 #include <syscall.h>
 #include <debugk.h>
+extern struct Sig_free_list sig_free_list;
+extern void schedule(int yield) __attribute__((noreturn));
 static void passive_alloc(u_int va, Pde *pgdir, u_int asid) {
   struct Page *p = NULL;
 
   if (va < UTEMP) {
     sys_kill(0,11);
-    // env_run(curenv);
     //panic("address too low");
   }
 
   if (va >= USTACKTOP && va < USTACKTOP + BY2PG) {
+    printk("va %x \n",va);
     panic("invalid memory");
   }
 
@@ -89,19 +91,14 @@ void do_tlb_mod(struct Trapframe *tf) {
 
 void do_signal(struct Trapframe *tf){
   struct proc_signal *signal;
+  if(TAILQ_EMPTY(&curenv->sig_wait_list)){
+    return;
+  }
   TAILQ_FOREACH(signal,&curenv->sig_wait_list,sig_wait_link){
     if(signal!=NULL&&signal->signum>=1&&signal->signum<=64){
         if(signal->signum==SIGSEGV||signal->signum==SIGKILL){
             //直接处理
-        }
-        else if(curenv->env_sig_top>-1){ //表明在一个信号处理函数中
-            u_int signum=curenv->running_sig[curenv->env_sig_top];
-            int mask=curenv->env_sigaction[signum].sa_mask.sig[(signal->signum-1)/32];
-            if(((mask>>((signal->signum-1)%32))&0x1)){
-              continue;
-            }  
-        }
-        else{
+        }else{
             int mask=curenv->env_sigset_t.sig[(signal->signum-1)/32];
             if(((mask>>((signal->signum-1)%32))&0x1)){
               continue;
@@ -109,6 +106,8 @@ void do_signal(struct Trapframe *tf){
         }
         TAILQ_REMOVE(&curenv->sig_wait_list,signal,sig_wait_link);
         signal_handle(signal->signum,tf);
+        signal->signum=0;
+        LIST_INSERT_HEAD(&sig_free_list,signal,sig_free_link);
         break;
     }
   }
@@ -130,7 +129,6 @@ void signal_handle(int num,struct Trapframe *tf) {
       tf->regs[29] -= sizeof(tf->regs[4]); 
       tf->regs[29] -= sizeof(tf->regs[5]);
       tf->regs[29] -= sizeof(tf->regs[6]);
-      sys_push_running_sig(num);
       tf->cp0_epc = curenv->env_signal_caller;
       }
   } else {

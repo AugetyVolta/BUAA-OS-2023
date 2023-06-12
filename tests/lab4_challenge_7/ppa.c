@@ -46,12 +46,9 @@ int main() {
   for (i=0;i<10000000;) {
     i++;
     if(((i%100)==0)){
-      //syscall_yield();
     }
     if (i == 10000) {
       kill(PP1,2);
-      // kill(PP2,11);
-      // syscall_yield();
     }
   }
   return 0;

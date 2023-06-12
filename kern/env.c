@@ -12,7 +12,7 @@
 #define NASID 64
 
 struct Env envs[NENV] __attribute__((aligned(BY2PG))); // All environments
-struct proc_signal signals[256] __attribute__((aligned(BY2PG)));
+struct proc_signal signals[256] __attribute__((aligned(BY2PG)));;
 struct Sig_free_list sig_free_list;
 
 struct Env *curenv = NULL;            // the current env
@@ -181,7 +181,6 @@ void env_init(void) {
     envs[i].env_status = ENV_FREE;
     LIST_INSERT_HEAD((&env_free_list), &envs[i], env_link);
     TAILQ_INIT(&envs[i].sig_wait_list); //第一个进程初始化sig_wait_list
-    envs[i].env_sig_top=-1;
   }
   for(i=0;i<256;i++){
     signals[i].signum=0;
@@ -296,13 +295,10 @@ int env_alloc(struct Env **new, u_int parent_id) {
       e->env_sigaction[i].sa_handler=NULL;
       e->env_sigaction[i].sa_mask.sig[0]=0;
       e->env_sigaction[i].sa_mask.sig[1]=0;
-      e->running_sig[i]=0; //重入栈
   }
-  e->is_running_add=0;
   e->env_sigset_t.sig[0]=0;
   e->env_sigset_t.sig[1]=0;
   e->env_signal_caller=0; //for caller
-  e->env_sig_top=-1;//正在执行的信号处理函数栈顶
   e->env_user_tlb_mod_entry = 0; // for lab4
   e->env_runs = 0;               // for lab6
   /* Exercise 3.4: Your code here. (3/4) */
@@ -509,6 +505,9 @@ static inline void pre_env_run(struct Env *e) {
 
 extern void env_pop_tf(struct Trapframe *tf,u_int asid)
     __attribute__((noreturn));
+extern void env_pop_asid(u_int asid)
+    __attribute__((noreturn));
+extern do_signal(struct Trapframe *tf);
 /* Overview:
  *   Switch CPU context to the specified env 'e'.
  *
@@ -533,7 +532,6 @@ void env_run(struct Env *e) {
   /* Step 2: Change 'curenv' to 'e'. */
   curenv = e;
   curenv->env_runs++; // lab6
-
   /* Step 3: Change 'cur_pgdir' to 'curenv->env_pgdir', switching to its address
    * space. */
   /* Exercise 3.8: Your code here. (1/2) */
@@ -548,6 +546,34 @@ void env_run(struct Env *e) {
    * function as well.
    */
   /* Exercise 3.8: Your code here. (2/2) */
+  // env_pop_asid(curenv->env_asid);
+  struct Trapframe * tf=&curenv->env_tf;
+  env_pop_tf(tf,curenv->env_asid);
+}
+
+void env_run1(struct Env *e) {
+
+  /* Step 1:
+   *   If 'curenv' is NULL, this is the first time through.
+   *   If not, we may be switching from a previous env, so save its context into
+   *   'curenv->env_tf' first.
+   */
+  /* Step 2: Change 'curenv' to 'e'. */
+  curenv = e;
+  /* Step 3: Change 'cur_pgdir' to 'curenv->env_pgdir', switching to its address
+   * space. */
+  /* Exercise 3.8: Your code here. (1/2) */
+  /* Step 4: Use 'env_pop_tf' to restore the curenv's saved context (registers)
+   * and return/go to user mode.
+   *
+   * Hint:
+   *  - You should use 'curenv->env_asid' here.
+   *  - 'env_pop_tf' is a 'noreturn' function: it restores PC from 'cp0_epc'
+   * thus not returning to the kernel caller, making 'env_run' a 'noreturn'
+   * function as well.
+   */
+  /* Exercise 3.8: Your code here. (2/2) */
+  // env_pop_asid(curenv->env_asid);
   env_pop_tf(&curenv->env_tf,curenv->env_asid);
 }
 

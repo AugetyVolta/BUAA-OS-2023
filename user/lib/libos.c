@@ -4,15 +4,16 @@
 
 static void __attribute__((noreturn)) signal_caller(struct Trapframe *tf,int num,void (*sa_handler)(int)) {
     if(sa_handler){
+        sigset_t mask,save;
+        syscall_get_sig_mask(0,num,&mask);
+        sigprocmask(2,&mask,&save);
         void (*func)(int);
         func=sa_handler;
         func(num);
-        syscall_pop_running_sig();
-        // tf->cp0_epc+=4; //不加才是正确的，加了会导致访问错误的地方，产生SIGSEGV
+        sigprocmask(2,&save,NULL);
         syscall_set_trapframe(0,tf);
     }
     else if(num==SIGSEGV||num==SIGKILL||num==SIGTERM){
-        syscall_pop_running_sig();
         debugf("The process ended successfully.\n");
         exit(); //直接结束进程
     }

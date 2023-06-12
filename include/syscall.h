@@ -1,8 +1,6 @@
 #ifndef SYSCALL_H
 #define SYSCALL_H
 
-void sys_push_running_sig(int num);
-
 #ifndef __ASSEMBLER__
 
 enum {
@@ -28,8 +26,7 @@ enum {
 	SYS_sigprocmask,
 	SYS_kill,
 	SYS_set_env_signal_caller,
-	SYS_pop_running_sig,
-	SYS_push_running_sig,
+	SYS_get_sig_mask,
 	MAX_SYSNO,
 };
 

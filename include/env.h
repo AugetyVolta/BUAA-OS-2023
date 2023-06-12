@@ -45,10 +45,8 @@ struct Env {
 	struct sigaction env_sigaction[65]; //信号处理函数集,指针数组
 	struct sigset_t env_sigset_t; //进程的信号处理掩码
 	struct Sig_wait_list sig_wait_list;//等待信号列表
-	int running_sig[65];//正在执行的信号处理函数栈
-	int env_sig_top;//正在处理的信号栈顶，如果栈为空为-1
-	int is_running_add;
 	u_int env_signal_caller;//用户态统一处理函数
+	int empty[500];
 };
 LIST_HEAD(Env_list, Env);
 TAILQ_HEAD(Env_sched_list, Env);

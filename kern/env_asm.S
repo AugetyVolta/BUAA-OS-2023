@@ -3,13 +3,10 @@
 #include <trap.h>
 
 
-.text
 LEAF(env_pop_asid)
-.set reorder
-.set at
-	sll     a1, a1, 6
-	mtc0    a1, CP0_ENTRYHI
-	move    sp, a0
+	sll     a0, a0, 6
+	mtc0    a0, CP0_ENTRYHI
+	jr ra
 END(env_pop_asid)
 
 .text

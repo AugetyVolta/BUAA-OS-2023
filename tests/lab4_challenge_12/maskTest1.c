@@ -19,7 +19,7 @@ i am killed ...
     void handler(int num){
             cnt++;
             debugf("cnt:%d HANDLER:%x %d\n",cnt,syscall_getenvid(),num);
-            if(cnt==4){
+            if(cnt==10){
                   debugf("CONGRATULATION:TEST PASSED!\n");
                   kill(0,SIGKILL);
             }
@@ -34,7 +34,7 @@ i am killed ...
      int ret = fork();
        debugf("father:%d child:%d\n",syscall_getenvid(),ret);
        if (ret != 0) {
-               for(int i=0;i<4;i++){
+               for(int i=0;i<10;i++){
                   kill(ret,10);
                }
       } else {

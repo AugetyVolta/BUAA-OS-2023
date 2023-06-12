@@ -27,8 +27,6 @@ int main(int argc,char**argv){
         debugf("child is %d\n", ret);
         kill(ret,2);
         for(int i=0;i<1000000;i++)temp*=i;
-        //sig.sa_handler=handlertwo;
-        //panic_on(sigaction(2,&sig,NULL));
         debugf("Father : global %d.\n",global);
         }else{
             kill(2048, 2);

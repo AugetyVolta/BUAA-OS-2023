@@ -26,4 +26,6 @@ int main(){
    act.sa_handler=handler3;
    sigaction(3,&act,NULL);
    kill(0,1);
+   for(int i=0;i<10000000;i++);
+   for(int i=0;i<10000000;i++);
 }
