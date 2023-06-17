@@ -2,15 +2,17 @@
 #include <lib.h>
 #include <mmu.h>
 
-static void __attribute__((noreturn)) signal_caller(struct Trapframe *tf,int num,void (*sa_handler)(int)) {
+static void __attribute__((noreturn)) signal_caller(struct Trapframe *tf,int num,void (*sa_handler)(int),int signal_index) {
     if(sa_handler){
-        sigset_t mask,save;
-        syscall_get_sig_mask(0,num,&mask);
-        sigprocmask(2,&mask,&save);
+        sigset_t save;
+        int save_index;
+        syscall_set_env_cur_signal(&signal_index,&save_index);
+        syscall_handle_mask(NULL,&save,num);
         void (*func)(int);
         func=sa_handler;
         func(num);
-        sigprocmask(2,&save,NULL);
+        syscall_handle_mask(&save,NULL,0);
+        syscall_set_env_cur_signal(&save_index,NULL);
         syscall_set_trapframe(0,tf);
     }
     else if(num==SIGSEGV||num==SIGKILL||num==SIGTERM){

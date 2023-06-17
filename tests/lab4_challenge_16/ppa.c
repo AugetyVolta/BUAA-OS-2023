@@ -41,10 +41,10 @@ int main() {
     debugf("pp1received start sig and send!\n");
     who = PP2;
     kill(who, 5);
-    kill(who,5);
     kill(who, 3);
+    kill(who, 2);
     kill(who, 5);
-    kill(who, 2);// 共发送4次5信号，PP2应当均可接收到
+    kill(who, 5);// 共发送4次5信号，PP2应当均可接收到
     debugf("@@@@PP1 sent 5,3,2 to PP2@@@@\n");
   }if(me == PP2){
     debugf("wait PP1 start!\n");

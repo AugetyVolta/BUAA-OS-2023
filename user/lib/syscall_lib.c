@@ -83,6 +83,10 @@ int syscall_kill(u_int envid, int sig){
     return msyscall(SYS_kill,envid,sig);
 }
 
-void syscall_get_sig_mask(int envid, int signum, sigset_t *set){
-    msyscall(SYS_get_sig_mask,envid,signum,set);
+void syscall_handle_mask(sigset_t *set, sigset_t *oldset, int signum){
+    msyscall(SYS_handle_mask,set,oldset,signum);
+}
+
+void syscall_set_env_cur_signal(int *signal_index,int *save_index){
+    msyscall(SYS_set_env_cur_signal,signal_index,save_index);
 }

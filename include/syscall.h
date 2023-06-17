@@ -26,7 +26,8 @@ enum {
 	SYS_sigprocmask,
 	SYS_kill,
 	SYS_set_env_signal_caller,
-	SYS_get_sig_mask,
+	SYS_handle_mask,
+	SYS_set_env_cur_signal,
 	MAX_SYSNO,
 };
 

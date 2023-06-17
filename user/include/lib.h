@@ -27,7 +27,8 @@ int syscall_sigaction(int signum, const struct sigaction *act, struct sigaction 
 int syscall_sigprocmask(int how, const sigset_t *set, sigset_t *oldset);
 int syscall_kill(u_int envid, int sig);
 void syscall_set_env_signal_caller(u_int envid,u_int func);
-void syscall_get_sig_mask(int envid, int signum, sigset_t *set);
+void syscall_handle_mask(sigset_t *set, sigset_t *oldset, int signum);
+void syscall_set_env_cur_signal(int *signal_index,int *save_index);
 
 // libos
 void exit(void) __attribute__((noreturn));

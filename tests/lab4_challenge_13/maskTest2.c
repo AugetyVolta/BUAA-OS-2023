@@ -19,7 +19,7 @@ int main(){
    act.sa_handler=handler1;
    sigaction(1,&act,NULL);
    act.sa_handler=handler2;
-   a.sig[0]|=(1<<2);  //block signal 3
+   sigaddset(&a,3);
    act.sa_mask=a;
    sigaction(2,&act,NULL);
    act.sa_mask.sig[0]=0;

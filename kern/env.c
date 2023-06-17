@@ -184,6 +184,7 @@ void env_init(void) {
   }
   for(i=0;i<256;i++){
     signals[i].signum=0;
+    signals[i].sequence=0;
     memset(&signals[i],0,sizeof(signals[i]));
     LIST_INSERT_HEAD((&sig_free_list),&signals[i],sig_free_link);
   }
@@ -296,6 +297,8 @@ int env_alloc(struct Env **new, u_int parent_id) {
       e->env_sigaction[i].sa_mask.sig[0]=0;
       e->env_sigaction[i].sa_mask.sig[1]=0;
   }
+  e->env_signal_top=0;
+  e->env_cur_signal=0;
   e->env_sigset_t.sig[0]=0;
   e->env_sigset_t.sig[1]=0;
   e->env_signal_caller=0; //for caller
@@ -549,32 +552,6 @@ void env_run(struct Env *e) {
   // env_pop_asid(curenv->env_asid);
   struct Trapframe * tf=&curenv->env_tf;
   env_pop_tf(tf,curenv->env_asid);
-}
-
-void env_run1(struct Env *e) {
-
-  /* Step 1:
-   *   If 'curenv' is NULL, this is the first time through.
-   *   If not, we may be switching from a previous env, so save its context into
-   *   'curenv->env_tf' first.
-   */
-  /* Step 2: Change 'curenv' to 'e'. */
-  curenv = e;
-  /* Step 3: Change 'cur_pgdir' to 'curenv->env_pgdir', switching to its address
-   * space. */
-  /* Exercise 3.8: Your code here. (1/2) */
-  /* Step 4: Use 'env_pop_tf' to restore the curenv's saved context (registers)
-   * and return/go to user mode.
-   *
-   * Hint:
-   *  - You should use 'curenv->env_asid' here.
-   *  - 'env_pop_tf' is a 'noreturn' function: it restores PC from 'cp0_epc'
-   * thus not returning to the kernel caller, making 'env_run' a 'noreturn'
-   * function as well.
-   */
-  /* Exercise 3.8: Your code here. (2/2) */
-  // env_pop_asid(curenv->env_asid);
-  env_pop_tf(&curenv->env_tf,curenv->env_asid);
 }
 
 void env_check() {

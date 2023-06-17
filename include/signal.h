@@ -21,6 +21,7 @@ TAILQ_HEAD(Sig_wait_list,proc_signal);
 LIST_HEAD(Sig_free_list,proc_signal);
 struct proc_signal{
     int signum;
+    int sequence;
     TAILQ_ENTRY(proc_signal) sig_wait_link;
     LIST_ENTRY(proc_signal) sig_free_link;
 };

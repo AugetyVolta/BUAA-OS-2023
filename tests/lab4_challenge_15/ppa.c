@@ -11,16 +11,12 @@ int main(int argc,char**argv){
     struct sigaction sig;
     sigemptyset(&set);
     sigaddset(&set,1);
-    //sigaddset(&set,2);
     sigaddset(&set,15);
     sig.sa_handler=handler;
     sig.sa_mask=set;
     panic_on(sigaction(2,&sig,NULL));
-    //panic_on(sigprocmask(2,&set,NULL));
-    // sigdelset(&set,2);
     int ret=fork(),temp=0;
     if(ret!=0){
-        // sigprocmask(2,&set,NULL);
         debugf("father envid %d\n",syscall_getenvid());
         debugf("child is %d\n", ret);
         if (syscall_getenvid() == 4097) {

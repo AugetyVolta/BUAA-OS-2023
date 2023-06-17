@@ -42,11 +42,13 @@ struct Env {
 	// Lab 6 scheduler counts
 	u_int env_runs; // number of times been env_run'ed
 	//signal
-	struct sigaction env_sigaction[65]; //信号处理函数集,指针数组
-	struct sigset_t env_sigset_t; //进程的信号处理掩码
-	struct Sig_wait_list sig_wait_list;//等待信号列表
-	u_int env_signal_caller;//用户态统一处理函数
-	int empty[500];
+	struct sigaction env_sigaction[65]; //进程信号处理函数集
+	struct sigset_t env_sigset_t; 		//进程的信号屏蔽掩码
+	struct Sig_wait_list sig_wait_list;	//进程等待信号列表
+	u_int env_signal_caller;			//用户态统一处理函数
+	int env_signal_top;					//进程最新的信号index
+	int env_cur_signal;					//进程当前正在处理的信号
+	int empty[200];
 };
 LIST_HEAD(Env_list, Env);
 TAILQ_HEAD(Env_sched_list, Env);

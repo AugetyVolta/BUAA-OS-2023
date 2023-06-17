@@ -55,18 +55,32 @@ int sys_kill(u_int envid, int sig){
     if(signal==NULL){
       printk("null\n");
     }
+    e->env_signal_top++; //进程总信号数量增加
     LIST_REMOVE(signal,sig_free_link);
     memset(signal,0,sizeof(struct proc_signal));
     signal->signum=sig;
+    signal->sequence=e->env_signal_top;
     TAILQ_INSERT_HEAD(&e->sig_wait_list,signal,sig_wait_link);//后来先处理
     return 0;
 }
 
-void sys_get_sig_mask(int envid, int signum, sigset_t *set) {
+void sys_handle_mask(sigset_t *set, sigset_t *oldset, int signum) {
 	struct Env *e;
-	try(envid2env(envid, &e, 1));
-  set->sig[0]=e->env_sigaction[signum].sa_mask.sig[0];
-  set->sig[1]=e->env_sigaction[signum].sa_mask.sig[1];
+	try(envid2env(0, &e, 1)); //
+  if(signum==0){
+    if(oldset){
+      *oldset=curenv->env_sigset_t;
+    }
+    e->env_sigset_t.sig[0]=set->sig[0];
+    e->env_sigset_t.sig[1]=set->sig[1];
+  }
+  else{
+    if(oldset){
+      *oldset=curenv->env_sigset_t;
+    }
+    e->env_sigset_t.sig[0]=e->env_sigaction[signum].sa_mask.sig[0];
+    e->env_sigset_t.sig[1]=e->env_sigaction[signum].sa_mask.sig[1];
+  }
 }
 
 void sys_set_env_signal_caller(u_int envid,u_int func){
@@ -75,6 +89,13 @@ void sys_set_env_signal_caller(u_int envid,u_int func){
         panic("wrong wrong.\n");   
     }
     e->env_signal_caller=func;
+}
+
+void sys_set_env_cur_signal(int *signal_index,int *save_index){
+    if(save_index){
+      *save_index=curenv->env_cur_signal;
+    }
+    curenv->env_cur_signal=*signal_index;
 }
 
 /* Overview:
@@ -623,8 +644,10 @@ void *syscall_table[MAX_SYSNO] = {
     [SYS_sigprocmask] = sys_sigprocmask,
     [SYS_kill] = sys_kill,
     [SYS_set_env_signal_caller] = sys_set_env_signal_caller,
-    [SYS_get_sig_mask] = sys_get_sig_mask,
+    [SYS_handle_mask] = sys_handle_mask,
+    [SYS_set_env_cur_signal] = sys_set_env_cur_signal,
 };
+
 
 /* Overview:
  *   Call the function in 'syscall_table' indexed at 'sysno' with arguments

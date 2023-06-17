@@ -8,7 +8,9 @@ static void passive_alloc(u_int va, Pde *pgdir, u_int asid) {
   struct Page *p = NULL;
 
   if (va < UTEMP) {
+    #if !defined(LAB) || LAB >= 4
     sys_kill(0,11);
+    #endif
     //panic("address too low");
   }
 
@@ -54,7 +56,7 @@ Pte _do_tlb_refill(u_long va, u_int asid) {
   return *pte;
 }
 
-#if !defined(LAB) || LAB >= 4
+#if !defined(LAB) || LAB >= 3
 /* Overview:
  *   This is the TLB Mod exception handler in kernel.
  *   Our kernel allows user programs to handle TLB Mod exception in user mode,
@@ -98,14 +100,18 @@ void do_signal(struct Trapframe *tf){
     if(signal!=NULL&&signal->signum>=1&&signal->signum<=64){
         if(signal->signum==SIGSEGV||signal->signum==SIGKILL){
             //直接处理
-        }else{
+        }
+        else if(signal->sequence<=curenv->env_cur_signal){
+            break;
+        }
+        else {
             int mask=curenv->env_sigset_t.sig[(signal->signum-1)/32];
             if(((mask>>((signal->signum-1)%32))&0x1)){
               continue;
             }
         }
         TAILQ_REMOVE(&curenv->sig_wait_list,signal,sig_wait_link);
-        signal_handle(signal->signum,tf);
+        signal_handle(signal->signum,tf,signal->sequence);
         signal->signum=0;
         LIST_INSERT_HEAD(&sig_free_list,signal,sig_free_link);
         break;
@@ -113,7 +119,7 @@ void do_signal(struct Trapframe *tf){
   }
 }
 
-void signal_handle(int num,struct Trapframe *tf) {
+void signal_handle(int num,struct Trapframe *tf,int signal_index) {
   if (curenv->env_sigaction[num].sa_handler||
       num==SIGSEGV||num==SIGKILL||num==SIGTERM) {
     struct Trapframe tmp_tf = *tf;
@@ -126,11 +132,13 @@ void signal_handle(int num,struct Trapframe *tf) {
       tf->regs[4] = tf->regs[29];
       tf->regs[5] = num;
       tf->regs[6] = curenv->env_sigaction[num].sa_handler;
+      tf->regs[7] = signal_index;
       tf->regs[29] -= sizeof(tf->regs[4]); 
       tf->regs[29] -= sizeof(tf->regs[5]);
       tf->regs[29] -= sizeof(tf->regs[6]);
+      tf->regs[29] -= sizeof(tf->regs[7]);
       tf->cp0_epc = curenv->env_signal_caller;
-      }
+    }
   } else {
     //默认不处理
   }
